@@ -1,0 +1,11 @@
+Machine Learning:
+
+Overfitting occurs when a model learns training data too well and performs poorly on unseen data.
+
+Train-test split divides the dataset into training and testing data.
+
+NumPy is a Python library used for numerical computation.
+
+Scikit-learn is a machine learning library used for building models.
+
+EDA (Exploratory Data Analysis) helps understand patterns and relationships in data.
