@@ -28,12 +28,12 @@ export default function Home() {
       formData.append("role", role);
 
       const response = await fetch(
-        "http://127.0.0.1:8000/upload-resume",
-        {
-          method: "POST",
-          body: formData
-        }
-      );
+  "https://smart-interview-assistant-api-vryb.onrender.com/upload-resume",
+  {
+    method: "POST",
+    body: formData
+  }
+);
 
       const data = await response.json();
 
