@@ -5,46 +5,41 @@ from models import Base
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from pypdf import PdfReader
+
 import tempfile
 import os
 
 app = FastAPI()
 
-# ---------------------------------
-# CORS (Frontend connection)
-# ---------------------------------
+# -------------------------------
+# CORS
+# -------------------------------
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "https://smart-interview-assistant-xi.vercel.app"
-],
+        "*"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ---------------------------------
-# Create database tables
-# ---------------------------------
+# -------------------------------
+# Create DB Tables
+# -------------------------------
 Base.metadata.create_all(bind=engine)
 
-
-# ---------------------------------
-# Home route
-# ---------------------------------
+# -------------------------------
+# Home Route
+# -------------------------------
 @app.get("/")
 def home():
     return {"message": "Backend Working"}
 
-
-# ---------------------------------
-# Skill extraction
-# ---------------------------------
+# -------------------------------
+# Skills Extraction
+# -------------------------------
 def extract_skills(text):
-
-    skills = []
 
     skill_keywords = [
         "Python",
@@ -58,74 +53,37 @@ def extract_skills(text):
         "EDA"
     ]
 
+    found_skills = []
+
     for skill in skill_keywords:
-
         if skill.lower() in text.lower():
-            skills.append(skill)
+            found_skills.append(skill)
 
-    return skills
+    return found_skills
 
-
-# ---------------------------------
-# Question generation
-# ---------------------------------
+# -------------------------------
+# Question Generator
+# -------------------------------
 def generate_questions(role):
 
-    questions = []
-
-    try:
-
-        with open(
-            "knowledge_base/aiml_notes.txt",
-            "r",
-            encoding="utf-8"
-        ) as file:
-
-            knowledge = file.read()
-
-    except:
-
-        knowledge = ""
-
-
-    if role == "AI/ML Engineer":
-
-        if "Overfitting" in knowledge:
-            questions.append(
-                "What is overfitting and why does it happen?"
-            )
-
-        if "Train-test split" in knowledge:
-            questions.append(
-                "Why do we use train-test split?"
-            )
-
-        if "EDA" in knowledge:
-            questions.append(
-                "Why is EDA important?"
-            )
-
-        if len(questions) == 0:
-
-            questions = [
-                "Explain overfitting in machine learning.",
-                "What is train_test_split used for?",
-                "Why is EDA important?"
-            ]
-
-    elif role == "Backend Engineer":
-
-        questions = [
+    if role == "Backend Engineer":
+        return [
             "What is FastAPI?",
-            "Difference between GET and POST?"
+            "Difference between GET and POST?",
+            "What is REST API?",
+            "Explain dependency injection."
         ]
 
-    return questions
+    return [
+        "Explain overfitting in machine learning.",
+        "What is train_test_split used for?",
+        "Why is EDA important?",
+        "Difference between supervised and unsupervised learning?"
+    ]
 
-
-# ---------------------------------
-# Upload Resume Route
-# ---------------------------------
+# -------------------------------
+# Upload Resume
+# -------------------------------
 @app.post("/upload-resume")
 async def upload_resume(
     file: UploadFile = File(...),
@@ -136,44 +94,31 @@ async def upload_resume(
 
     try:
 
-        # Save temporary PDF
         with tempfile.NamedTemporaryFile(
             delete=False,
             suffix=".pdf"
         ) as temp:
 
-            temp.write(
-                await file.read()
-            )
-
+            temp.write(await file.read())
             temp_path = temp.name
 
-
-        # Read PDF
         reader = PdfReader(temp_path)
 
         text = ""
 
         for page in reader.pages:
+            page_text = page.extract_text()
 
-            extracted = page.extract_text()
+            if page_text:
+                text += page_text
 
-            if extracted:
-                text += extracted
-
-
-        # Extract skills
         skills = extract_skills(text)
 
-        # Generate questions
         questions = generate_questions(role)
 
-
-        # Save database
         db = SessionLocal()
 
         try:
-
             create_interview(
                 db=db,
                 filename=file.filename,
@@ -182,20 +127,22 @@ async def upload_resume(
                 questions=", ".join(questions)
             )
 
+        except Exception as db_error:
+            print("Database Error:", db_error)
+
         finally:
             db.close()
 
-
         return {
-
             "filename": file.filename,
             "role": role,
             "skills": skills,
             "interview_questions": questions
-
         }
 
     except Exception as e:
+
+        print("UPLOAD ERROR:", str(e))
 
         return {
             "error": str(e)
