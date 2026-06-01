@@ -28,7 +28,12 @@ export default function Home() {
       formData.append("role", role);
 
       const response = await fetch(
-  "https://smart-interview-assistant-api-yryb.onrender.com/upload-resume",
+        "https://smart-interview-assistant-api-yryb.onrender.com/upload-resume",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
       const data = await response.json();
 
@@ -37,7 +42,6 @@ export default function Home() {
     } catch (err) {
 
       setError("Backend connection failed");
-
       console.log(err);
 
     } finally {
@@ -55,7 +59,6 @@ export default function Home() {
       <h1 className="text-5xl font-bold mb-10 text-center">
         AI Interview System
       </h1>
-
 
       <div className="border rounded-xl p-8 shadow-md">
 
@@ -84,7 +87,7 @@ export default function Home() {
               <input
                 type="file"
                 className="hidden"
-                onChange={(e)=>setFile(e.target.files[0])}
+                onChange={(e) => setFile(e.target.files[0])}
               />
 
             </label>
@@ -93,8 +96,8 @@ export default function Home() {
 
               {
                 file
-                ? file.name
-                : "No file selected"
+                  ? file.name
+                  : "No file selected"
               }
 
             </span>
@@ -103,10 +106,9 @@ export default function Home() {
 
         </div>
 
-
         <select
           value={role}
-          onChange={(e)=>setRole(e.target.value)}
+          onChange={(e) => setRole(e.target.value)}
           className="
           border
           p-3
@@ -126,7 +128,6 @@ export default function Home() {
 
         </select>
 
-
         <button
           onClick={uploadResume}
           className="
@@ -141,12 +142,11 @@ export default function Home() {
 
           {
             loading
-            ? "Uploading..."
-            : "Upload Resume"
+              ? "Uploading..."
+              : "Upload Resume"
           }
 
         </button>
-
 
         {error && (
 
@@ -158,7 +158,6 @@ export default function Home() {
 
       </div>
 
-
       {result && (
 
         <div className="mt-10 border rounded-xl p-8 shadow-md">
@@ -169,8 +168,8 @@ export default function Home() {
 
           <ul className="list-disc pl-6 text-lg">
 
-            {result.skills.map(
-              (skill,index)=>(
+            {result.skills?.map(
+              (skill, index) => (
 
                 <li key={index}>
                   {skill}
@@ -181,42 +180,37 @@ export default function Home() {
 
           </ul>
 
-
           <h2 className="text-3xl font-bold mt-10 mb-5">
             Interview Questions
           </h2>
 
-          {
+          {result.interview_questions?.map(
+            (question, index) => (
 
-            result.interview_questions.map(
-              (question,index)=>(
+              <div
+                key={index}
+                className="mb-8"
+              >
 
-                <div
-                  key={index}
-                  className="mb-8"
-                >
+                <p className="font-semibold text-xl mb-3">
+                  {question}
+                </p>
 
-                  <p className="font-semibold text-xl mb-3">
-                    {question}
-                  </p>
+                <textarea
+                  placeholder="Write your answer here..."
+                  className="
+                  w-full
+                  border
+                  p-4
+                  rounded-lg
+                  "
+                  rows="5"
+                />
 
-                  <textarea
-                    placeholder="Write your answer here..."
-                    className="
-                    w-full
-                    border
-                    p-4
-                    rounded-lg
-                    "
-                    rows="5"
-                  />
+              </div>
 
-                </div>
-
-              )
             )
-
-          }
+          )}
 
           <button
             className="
